@@ -6,12 +6,15 @@ import numpy as np
 import pandas as pd
 
 app = FastAPI()
-model_path = './Trained-Models/RF_Loan_model.joblib'
-model = joblib.load(model_path)
+
+def load_model():
+	model_path = './Trained-Models/RF_Loan_model.joblib' ## Define model path to load the model
+	model = joblib.load(model_path)
+	return model
 
 
-#Perform parsing
-class LoanPred(BaseModel):
+## Perform parsing
+class LoanPred(BaseModel): ## Defining data type of input and convert input to specified data format
 	Gender: float
 	Married: float
 	Dependents: float
@@ -23,14 +26,15 @@ class LoanPred(BaseModel):
 	Property_Area: float
 	TotalIncome: float
 
-
-@app.get('/')
+## Defining the paths
+@app.get('/') ## Default path
 def index():
     return {'message': 'Welcome to Loan Prediction App'}
 
-# defining the function which will make the prediction using the data which the user inputs 
-@app.post('/predict')
-def predict_loan_status(loan_details: LoanPred):
+## Defining the function which will make the prediction using the data which the user inputs (JSON)
+@app.post('/predict') ## On sending POST request to 'root/predict' with JSON input, we load the model, perform prediction & return output as JSON 
+def predict_loan_status(loan_details: LoanPred): ## JSON input passed through the instructor
+	model = load_model()
 	data = loan_details.model_dump() ## Converts from json to python dict
 	gender = data['Gender']
 	married = data['Married']
@@ -43,7 +47,7 @@ def predict_loan_status(loan_details: LoanPred):
 	property_area = data['Property_Area']
 	income = data['TotalIncome']
 
-	# Making predictions 
+	## Predictions 
 	prediction = model.predict([[gender, married, dependents, education, self_employed, loan_amt, loan_term, credit_hist, property_area,income]])
 
 	if prediction == 0:
