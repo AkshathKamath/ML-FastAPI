@@ -7,14 +7,29 @@ import pandas as pd
 
 app = FastAPI()
 
+## Load the model
 def load_model():
 	model_path = './Trained-Models/RF_Loan_model.joblib' ## Define model path to load the model
 	model = joblib.load(model_path)
 	return model
 
-
 ## Perform parsing
-class LoanPred(BaseModel): ## Defining data type of input and convert input to specified data format
+def dataParser(data):
+	listData=[]
+	listData.append(data['Gender'])
+	listData.append(data['Married'])
+	listData.append(data['Dependents'])
+	listData.append(data['Education'])
+	listData.append(data['Self_Employed'])
+	listData.append(data['LoanAmount'])
+	listData.append(data['Loan_Amount_Term'])
+	listData.append(data['Credit_History'])
+	listData.append(data['Property_Area'])
+	listData.append(data['TotalIncome'])
+	return listData
+
+## Defining data type of input and convert input to specified data format
+class LoanPred(BaseModel): 
 	Gender: float
 	Married: float
 	Dependents: float
@@ -26,6 +41,7 @@ class LoanPred(BaseModel): ## Defining data type of input and convert input to s
 	Property_Area: float
 	TotalIncome: float
 
+
 ## Defining the paths
 @app.get('/') ## Default path
 def index():
@@ -34,21 +50,12 @@ def index():
 ## Defining the function which will make the prediction using the data which the user inputs (JSON)
 @app.post('/predict') ## On sending POST request to 'root/predict' with JSON input, we load the model, perform prediction & return output as JSON 
 def predict_loan_status(loan_details: LoanPred): ## JSON input passed through the instructor
-	model = load_model()
+	model = load_model() ## Load model
 	data = loan_details.model_dump() ## Converts from json to python dict
-	gender = data['Gender']
-	married = data['Married']
-	dependents = data['Dependents']
-	education = data['Education']
-	self_employed = data['Self_Employed']
-	loan_amt = data['LoanAmount']
-	loan_term = data['Loan_Amount_Term']
-	credit_hist = data['Credit_History']
-	property_area = data['Property_Area']
-	income = data['TotalIncome']
+	data=dataParser(data) ## Parse data to list
 
 	## Predictions 
-	prediction = model.predict([[gender, married, dependents, education, self_employed, loan_amt, loan_term, credit_hist, property_area,income]])
+	prediction = model.predict([data])
 
 	if prediction == 0:
 		pred = 'Rejected'
